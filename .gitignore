@@ -1,0 +1,10 @@
+data/
+mlartifacts/
+*.duckdb
+.venv/
+__pycache__/
+.env
+*.pyc
+.pytest_cache/
+.ruff_cache/
+SignalLake_BUILD_PLAN.md

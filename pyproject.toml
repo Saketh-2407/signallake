@@ -1,0 +1,49 @@
+[project]
+name = "signallake"
+version = "0.1.0"
+description = "SignalLake: a local real-time data + ML platform (Kafka, Spark, dbt, MLflow, Redis, FastAPI)"
+readme = "README.md"
+requires-python = ">=3.11"
+# Airflow is intentionally NOT here: it gets its own venv (Phase 6).
+dependencies = [
+    "pyspark==3.5.*",
+    "kafka-python",
+    "confluent-kafka",
+    "duckdb",
+    "dbt-duckdb",
+    "scikit-learn",
+    "pandas",
+    "pyarrow",
+    "mlflow",
+    "redis",
+    "fastapi",
+    "uvicorn",
+    "locust",
+    "pydantic",
+    "pydantic-settings",
+    "python-dotenv",
+    "structlog",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/signallake"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
