@@ -38,8 +38,13 @@ GEN_ARGS ?=
 generate: ## (Phase 1) Synthetic events -> data/bronze parquet (add GEN_ARGS=--to-kafka to publish)
 	uv run python -m signallake.generate.producer --num-events $(NUM_EVENTS) --to-parquet $(GEN_ARGS)
 
-features: ## (Phase 2) Spark bronze -> silver -> gold features
-	@echo "not implemented yet: Phase 2"; exit 1
+FEATURES_ARGS ?=
+
+features: ## (Phase 2) Spark bronze -> silver -> gold (34 features). Override with FEATURES_ARGS="--driver-memory 6g"
+	uv run python -m signallake.features.build_features $(FEATURES_ARGS)
+
+consume-once: ## (Phase 2) Bounded demo: drain Kafka `events` into data/bronze_stream_demo
+	uv run python -m signallake.streaming.consume --once --output-dir data/bronze_stream_demo
 
 dbt-test: ## (Phase 3) dbt quality gates
 	@echo "not implemented yet: Phase 3"; exit 1
