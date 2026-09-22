@@ -23,6 +23,7 @@ dependencies = [
     "pydantic-settings",
     "python-dotenv",
     "structlog",
+    "tqdm>=4.70.1",
 ]
 
 [dependency-groups]

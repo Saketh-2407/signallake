@@ -31,8 +31,12 @@ fmt: ## Format and lint-fix with ruff
 	uv run ruff check --fix .
 
 # ---- Placeholders for later phases -------------------------------------------
-generate: ## (Phase 1) Synthetic event generator
-	@echo "not implemented yet: Phase 1"; exit 1
+# Override on the command line, e.g. `make generate NUM_EVENTS=50000` or `make generate GEN_ARGS=--to-kafka`.
+NUM_EVENTS ?= 2100000
+GEN_ARGS ?=
+
+generate: ## (Phase 1) Synthetic events -> data/bronze parquet (add GEN_ARGS=--to-kafka to publish)
+	uv run python -m signallake.generate.producer --num-events $(NUM_EVENTS) --to-parquet $(GEN_ARGS)
 
 features: ## (Phase 2) Spark bronze -> silver -> gold features
 	@echo "not implemented yet: Phase 2"; exit 1
