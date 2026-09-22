@@ -57,14 +57,27 @@ TRAIN_ARGS ?=
 train: ## (Phase 4) Train IsolationForest + 3 HGBC feature-tier runs, log/register to MLflow
 	uv run python -m signallake.train.train $(TRAIN_ARGS)
 
-load-online: ## (Phase 5) Load features into Redis
-	@echo "not implemented yet: Phase 5"; exit 1
+load-online: ## (Phase 5) Load latest per-customer features into Redis
+	uv run python -m signallake.serve.load_online_store
 
-serve: ## (Phase 5) Run the FastAPI service
-	@echo "not implemented yet: Phase 5"; exit 1
+SERVE_PORT ?= 8000
+# Multiple worker PROCESSES, not threads: /score is CPU-bound (sklearn predict_proba), and a
+# single process serializes that work on Python's GIL -- under concurrent load, p95 blows up
+# from queueing even though any one request is fast. Workers give each request its own GIL.
+SERVE_WORKERS ?= 4
 
-loadtest: ## (Phase 5) Locust load test
-	@echo "not implemented yet: Phase 5"; exit 1
+serve: ## (Phase 5) Run the FastAPI online-scoring service
+	# Each worker already gets its own process/core; without this, numpy/scikit-learn's BLAS
+	# and OpenMP thread pools each spin up ~nproc threads PER WORKER (measured: ~120 threads in
+	# a single worker process here), so N workers oversubscribe the machine by ~N*nproc -- that
+	# alone took p95 from ~10ms to >1s under concurrent load. One math thread per worker process
+	# is correct here since every request is a single tiny row, not a batch that benefits from
+	# intra-request parallelism.
+	OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1 \
+		uv run uvicorn signallake.serve.app:app --host 0.0.0.0 --port $(SERVE_PORT) --workers $(SERVE_WORKERS)
+
+loadtest: ## (Phase 5) Headless Locust load test against a running `make serve`
+	uv run python -m signallake.serve.run_loadtest
 
 airflow-init: ## (Phase 6) Set up the Airflow venv
 	@echo "not implemented yet: Phase 6"; exit 1

@@ -47,21 +47,16 @@ from sklearn.preprocessing import StandardScaler
 
 from signallake.common.config import PROJECT_ROOT, get_settings
 from signallake.common.logging import configure_logging, get_logger
+from signallake.common.mlflow_names import (
+    EXPERIMENT_NAME,
+    REGISTERED_MODEL_NAME,
+    SKOPS_TRUSTED_TYPES,
+)
 from signallake.features.columns import FEATURE_NAMES, features_for_tier
 
 log = get_logger(__name__)
 
-EXPERIMENT_NAME = "signallake-anomaly"
-REGISTERED_MODEL_NAME = "signallake-anomaly-detector"
 HGBC_TIERS = ("v1", "v2", "v3")
-# mlflow's skops serializer refuses to round-trip sklearn's tree node storage as "untrusted" by
-# default. Both our model types (IsolationForest, HistGradientBoostingClassifier) use it, and
-# every model we log here was trained by this same run, not loaded from an external source, so
-# trusting it is safe -- see the skops_trusted_types docs on mlflow.sklearn.log_model.
-SKOPS_TRUSTED_TYPES = [
-    "sklearn.tree._tree.Tree",  # IsolationForest's internal tree node storage
-    "sklearn.ensemble._hist_gradient_boosting.predictor.TreePredictor",  # HGBC's tree storage
-]
 V3_HEALTHY_F1_BAND = (0.85, 0.92)  # BUILD_PLAN §5 Phase 4: re-tune --noise if v3 lands outside this
 PERMUTATION_IMPORTANCE_SAMPLE = 50_000  # bound the cost of permutation_importance on huge val sets
 
