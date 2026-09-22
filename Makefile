@@ -3,7 +3,7 @@ export HOST_UID := $(shell id -u)
 export HOST_GID := $(shell id -g)
 
 .DEFAULT_GOAL := help
-.PHONY: help up down ps logs install fmt generate features dbt-test train load-online serve loadtest airflow-init airflow demo
+.PHONY: help up down ps logs install fmt generate features consume-once dbt-test dbt-bad-data-demo train load-online serve loadtest airflow-init airflow demo
 
 help: ## List targets
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -46,8 +46,11 @@ features: ## (Phase 2) Spark bronze -> silver -> gold (34 features). Override wi
 consume-once: ## (Phase 2) Bounded demo: drain Kafka `events` into data/bronze_stream_demo
 	uv run python -m signallake.streaming.consume --once --output-dir data/bronze_stream_demo
 
-dbt-test: ## (Phase 3) dbt quality gates
-	@echo "not implemented yet: Phase 3"; exit 1
+dbt-test: ## (Phase 3) dbt quality gates on the silver layer (dbt-duckdb)
+	uv run dbt build --project-dir dbt/signallake_dbt --profiles-dir dbt/signallake_dbt
+
+dbt-bad-data-demo: ## (Phase 3) Inject bad rows into a scratch copy of silver, show the gates fail, clean up
+	bash scripts/dbt_bad_data_demo.sh
 
 train: ## (Phase 4) Train + log to MLflow
 	@echo "not implemented yet: Phase 4"; exit 1

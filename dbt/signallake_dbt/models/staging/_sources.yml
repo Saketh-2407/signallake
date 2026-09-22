@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: signallake
+    description: "Spark batch outputs (Phase 2), read directly as external parquet — no loading step."
+    meta:
+      # {name} is substituted with each table's `name:` below by dbt-duckdb.
+      # SIGNALLAKE_DATA_DIR lets the bad-data demo point this at a scratch copy
+      # without touching the real data/ directory.
+      external_location: "read_parquet('{{ env_var('SIGNALLAKE_DATA_DIR', 'data') }}/{name}/**/*.parquet', hive_partitioning=true, union_by_name=true)"
+    tables:
+      - name: silver
+        description: "Bronze events cleaned, typed, and deduped on event_id (Spark batch, partitioned by event_date). This is the layer the quality gates below run against."
+      - name: gold
+        description: "Silver + 34 engineered features + label (Spark batch, partitioned by event_date)."

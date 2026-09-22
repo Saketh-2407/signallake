@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: stg_silver
+    description: "Quality-gated view over the silver event layer. Every test here is a gate: if it fails, silver has drifted from the contract the gold/feature layer assumes."
+    columns:
+      - name: event_id
+        description: "Primary key of an event."
+        tests:
+          - not_null
+          - unique
+      - name: customer_id
+        tests:
+          - not_null
+      - name: timestamp
+        tests:
+          - not_null
+      - name: amount
+        tests:
+          - not_null
+      - name: status
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['success', 'failed']
+      - name: merchant_category
+        tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - online_services
+                  - fashion
+                  - fuel
+                  - restaurant
+                  - electronics
+                  - entertainment
+                  - utilities
+                  - travel
+                  - grocery
+                  - health
+      - name: label
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1]

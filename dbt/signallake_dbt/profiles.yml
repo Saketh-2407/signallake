@@ -1,0 +1,9 @@
+signallake_dbt:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # Paths are resolved relative to the process's working directory (the repo
+      # root, since `make dbt-test` runs from there) — NOT relative to this file.
+      path: "{{ env_var('SIGNALLAKE_DUCKDB_PATH', 'data/signallake.duckdb') }}"
+      threads: 4

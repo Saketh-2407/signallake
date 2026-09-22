@@ -7,4 +7,8 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .ruff_cache/
+dbt/signallake_dbt/target/
+dbt/signallake_dbt/logs/
+dbt/signallake_dbt/dbt_packages/
+dbt/signallake_dbt/.user.yml
 SignalLake_BUILD_PLAN.md
