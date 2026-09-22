@@ -15,6 +15,7 @@ dependencies = [
     "pandas",
     "pyarrow",
     "mlflow",
+    "matplotlib",
     "redis",
     "fastapi",
     "uvicorn",

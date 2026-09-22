@@ -11,4 +11,5 @@ dbt/signallake_dbt/target/
 dbt/signallake_dbt/logs/
 dbt/signallake_dbt/dbt_packages/
 dbt/signallake_dbt/.user.yml
+reports/_train_artifacts/
 SignalLake_BUILD_PLAN.md

@@ -52,8 +52,10 @@ dbt-test: ## (Phase 3) dbt quality gates on the silver layer (dbt-duckdb)
 dbt-bad-data-demo: ## (Phase 3) Inject bad rows into a scratch copy of silver, show the gates fail, clean up
 	bash scripts/dbt_bad_data_demo.sh
 
-train: ## (Phase 4) Train + log to MLflow
-	@echo "not implemented yet: Phase 4"; exit 1
+TRAIN_ARGS ?=
+
+train: ## (Phase 4) Train IsolationForest + 3 HGBC feature-tier runs, log/register to MLflow
+	uv run python -m signallake.train.train $(TRAIN_ARGS)
 
 load-online: ## (Phase 5) Load features into Redis
 	@echo "not implemented yet: Phase 5"; exit 1
