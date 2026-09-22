@@ -1,5 +1,19 @@
 # SignalLake -- Measured Metrics
 
+Every number below is what a real run of this pipeline actually produced, not a target hit by
+adjusting the number itself -- see `SignalLake_BUILD_PLAN.md` §1. Where a number depends on how
+it was measured (a load test's concurrency, a benchmark's scenario), that's stated alongside it.
+
+## Summary
+
+| Metric | Value | Qualifier |
+|---|---|---|
+| Events processed | 2,100,000 | **synthetic data** -- Phase 1 generator, 30 days, 2,000 customers, 3% injected anomaly rate |
+| Reusable features | 34 | Spark windowed aggregates over customer history, 4 trailing windows (5m/10m/1h/24h) |
+| Anomaly detection F1 | 0.880 (precision 0.915, recall 0.848) | supervised HistGradientBoostingClassifier, all 34 features, measured on a **held-out TEST split of synthetic data** (time-based split, no future event in training) -- an F1 score, not an accuracy percentage |
+| Online scoring p95 latency | 240 ms | **in load tests only** -- 80 concurrent users, 120s, shared local dev machine (not a per-request guarantee, and not a dedicated benchmarking box -- see Phase 5 detail below) |
+| Recompute reduction | 63.1% fewer work units | **vs. a full-recompute baseline** -- incremental (watermark-based) rebuild touching 11 of 30 day-partitions, on synthetic data with a designed late-arrival scenario (see Phase 6 detail below) |
+
 ## Phase 5: online serving latency (measured, in load test)
 
 - Run config: 80 users, spawn rate 20.0/s, `-t 120s`, target `http://localhost:8000`, machine: Linux x86_64, 8 cores

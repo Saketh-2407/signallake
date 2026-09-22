@@ -107,5 +107,5 @@ airflow-init: ## (Phase 6) Set up the dedicated Airflow venv + Postgres metadata
 airflow: ## (Phase 6) Run Airflow standalone (LocalExecutor, Postgres backend) -- watch for the printed admin login
 	$(AIRFLOW_ENV) .venv-airflow/bin/airflow standalone
 
-demo: ## (Phase 7) One-command end-to-end demo
-	@echo "not implemented yet: Phase 7"; exit 1
+demo: ## (Phase 7) One-command end-to-end demo (200k events, isolated from your main dataset)
+	bash scripts/demo.sh
