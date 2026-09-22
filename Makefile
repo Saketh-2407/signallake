@@ -79,11 +79,33 @@ serve: ## (Phase 5) Run the FastAPI online-scoring service
 loadtest: ## (Phase 5) Headless Locust load test against a running `make serve`
 	uv run python -m signallake.serve.run_loadtest
 
-airflow-init: ## (Phase 6) Set up the Airflow venv
-	@echo "not implemented yet: Phase 6"; exit 1
+# Airflow gets its OWN venv (.venv-airflow), never the uv project's .venv -- its dependency
+# tree (FastAPI/Starlette/pydantic pins, etc.) can conflict with ours, and DAG files that shell
+# out via BashOperator never need signallake or pyspark importable in-process anyway.
+AIRFLOW_VERSION ?= 3.3.2
+AIRFLOW_PYTHON ?= 3.12
+# LocalExecutor needs real concurrent DB connections, which airflow standalone's own default
+# (SQLite) can't safely provide -- hence the airflow-postgres service in docker-compose.yml.
+# `airflow standalone` spawns its scheduler/api-server/triggerer/dag-processor as child
+# subprocesses that invoke the bare `airflow` command -- PATH must have the venv's bin/ first,
+# not just this recipe's own shell, or those children fail with "No such file: 'airflow'".
+AIRFLOW_ENV = PATH=$(CURDIR)/.venv-airflow/bin:$$PATH \
+	AIRFLOW_HOME=$(CURDIR)/airflow \
+	AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@localhost:5433/airflow \
+	AIRFLOW__CORE__EXECUTOR=LocalExecutor \
+	AIRFLOW__CORE__LOAD_EXAMPLES=false \
+	AIRFLOW__CORE__DAGS_FOLDER=$(CURDIR)/airflow/dags
 
-airflow: ## (Phase 6) Run Airflow standalone
-	@echo "not implemented yet: Phase 6"; exit 1
+airflow-init: ## (Phase 6) Set up the dedicated Airflow venv + Postgres metadata DB
+	uv venv .venv-airflow --python $(AIRFLOW_PYTHON)
+	uv pip install --python .venv-airflow/bin/python \
+		"apache-airflow==$(AIRFLOW_VERSION)" apache-airflow-providers-postgres \
+		--constraint "https://raw.githubusercontent.com/apache/airflow/constraints-$(AIRFLOW_VERSION)/constraints-$(AIRFLOW_PYTHON).txt"
+	mkdir -p airflow/dags airflow/logs
+	$(AIRFLOW_ENV) .venv-airflow/bin/airflow db migrate
+
+airflow: ## (Phase 6) Run Airflow standalone (LocalExecutor, Postgres backend) -- watch for the printed admin login
+	$(AIRFLOW_ENV) .venv-airflow/bin/airflow standalone
 
 demo: ## (Phase 7) One-command end-to-end demo
 	@echo "not implemented yet: Phase 7"; exit 1

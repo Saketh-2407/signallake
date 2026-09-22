@@ -155,7 +155,23 @@ def main(argv: list[str] | None = None) -> None:
         query = start_query(
             events, args.output_dir, args.checkpoint_dir, args.once, args.trigger_seconds
         )
-        query.awaitTermination()
+        try:
+            query.awaitTermination()
+        except Exception as e:
+            # A topic that doesn't exist YET (nobody has produced to it) is a real, expected
+            # state for a fresh/cold pipeline -- `make generate` alone never touches Kafka, only
+            # `--to-kafka` does. For the bounded demo, that's "0 new events", not a failure: a
+            # scheduled ingestion task running before the topic's first producer shouldn't crash
+            # the DAG. Continuous mode still raises -- a long-running consumer losing its topic
+            # is a real problem worth surfacing loudly.
+            if args.once and "UnknownTopicOrPartitionException" in str(e):
+                elapsed = time.perf_counter() - t0
+                print(
+                    f"topic '{args.topic}' does not exist yet (nothing has produced to it) -- "
+                    f"0 events ingested  [{elapsed:.1f}s]"
+                )
+                return
+            raise
         elapsed = time.perf_counter() - t0
         progress = query.lastProgress or {}
         rows = int(progress.get("numInputRows", 0))

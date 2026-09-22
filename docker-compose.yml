@@ -70,6 +70,28 @@ services:
       start_period: 15s
     restart: unless-stopped
 
+  airflow-postgres:
+    # Airflow's metadata DB (Phase 6). LocalExecutor needs real concurrent connections, which
+    # SQLite (airflow standalone's own default) can't safely provide -- see the Makefile's
+    # airflow-init/airflow targets.
+    image: postgres:16-alpine
+    container_name: signallake-airflow-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
 volumes:
   kafka-data:
   mlflow-db:
+  airflow-postgres-data:

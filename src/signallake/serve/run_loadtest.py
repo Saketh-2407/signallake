@@ -12,7 +12,6 @@ import concurrent.futures as cf
 import csv
 import os
 import platform
-import re
 import subprocess
 import sys
 import time
@@ -22,6 +21,7 @@ import redis
 import requests
 
 from signallake.common.config import PROJECT_ROOT, get_settings
+from signallake.common.metrics import upsert_metrics_section
 from signallake.serve.load_online_store import KEY_PREFIX
 
 LOADTEST_FILE = PROJECT_ROOT / "loadtest" / "locustfile.py"
@@ -116,8 +116,7 @@ def write_metrics_section(stats: dict[str, float], args: argparse.Namespace) -> 
         100 * stats["failure_count"] / stats["request_count"] if stats["request_count"] else 0
     )
     verdict = "PASS" if stats["p95"] < P95_TARGET_MS else "FAIL"
-    section = f"""## Phase 5: online serving latency (measured, in load test)
-
+    body = f"""\
 - Run config: {args.users} users, spawn rate {args.spawn_rate}/s, `-t {args.run_time}`, \
 target `{args.host}`, machine: {machine}
 - Requests: {stats["request_count"]:,} total, {stats["failure_count"]:,} failed \
@@ -127,20 +126,10 @@ target `{args.host}`, machine: {machine}
 - p95 target: < {P95_TARGET_MS} ms locally, in load tests (BUILD_PLAN §2) -- **{verdict}**
 - Note: Kafka, Redis, MLflow and the load generator itself all ran on this same {machine} box \
 during the test, alongside the IDE/dev session -- p95 is a real number for a shared local dev \
-machine, not a dedicated benchmarking one.
-"""
-    existing = (
-        METRICS_PATH.read_text()
-        if METRICS_PATH.exists()
-        else "# SignalLake -- Measured Metrics\n\n"
+machine, not a dedicated benchmarking one."""
+    upsert_metrics_section(
+        METRICS_PATH, "Phase 5", "Phase 5: online serving latency (measured, in load test)", body
     )
-    pattern = re.compile(r"## Phase 5:.*?(?=\n## |\Z)", re.DOTALL)
-    new_content = (
-        pattern.sub(section, existing)
-        if pattern.search(existing)
-        else existing.rstrip() + "\n\n" + section
-    )
-    METRICS_PATH.write_text(new_content)
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

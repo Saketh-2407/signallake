@@ -13,4 +13,12 @@ dbt/signallake_dbt/dbt_packages/
 dbt/signallake_dbt/.user.yml
 reports/_train_artifacts/
 reports/_loadtest_artifacts/
+reports/_benchmark_artifacts/
+.venv-airflow/
+airflow/airflow.cfg
+airflow/logs/
+airflow/*.db
+airflow/webserver_config.py
+airflow/simple_auth_manager_passwords.json.generated
+airflow/dags/__pycache__/
 SignalLake_BUILD_PLAN.md
