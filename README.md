@@ -5,7 +5,7 @@ generator with injected anomalies feeds Kafka, Spark builds a 34-feature gold ta
 quality gates, MLflow tracks and registers the winning model, and a FastAPI + Redis online store
 serves it -- all orchestrated by Airflow, all running locally in WSL2. No real data, no cloud
 account, no cost: everything below is on synthetic data, and every number is one this pipeline
-actually produced (see `SignalLake_BUILD_PLAN.md` §1).
+actually produced.
 
 ```mermaid
 flowchart LR
@@ -106,5 +106,3 @@ scripts/                # demo.sh, dbt bad-data demo
 reports/METRICS.md      # the real, measured numbers
 docs/INTERVIEW.md       # how to talk about this project and defend each metric
 ```
-
-See `SignalLake_BUILD_PLAN.md` for the full phase-by-phase build plan this was built from.
